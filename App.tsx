@@ -1,7 +1,15 @@
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import { AppLoading } from "expo";
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  TextInput,
+} from "react-native";
 import {
   useFonts,
   OpenSans_300Light,
@@ -9,11 +17,16 @@ import {
   OpenSans_600SemiBold,
   OpenSans_700Bold,
 } from "@expo-google-fonts/open-sans";
-import doneIcon from './assets/done-icon.png';
+import doneIcon from "./assets/done-icon.png";
+import Modal from 'react-native-modal';
+
+
 
 export default function App() {
-  //const [toDo, setToDo] = useState([]);
+  const [toDoList, setToDoList] = useState([]);
+  const [newToDo, setNewToDo] = useState('');
   const [isDone, setIsDone] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
   let [fontsLoaded] = useFonts({
     OpenSans_300Light,
@@ -26,53 +39,75 @@ export default function App() {
     return <AppLoading />;
   }
 
-  function handleCompletedAction() {
-    if(isDone) setIsDone(false);
-    else setIsDone(true);
+  function handleCompletedAction(index) {
+    toDoList.splice(index, 1);
+    setToDoList(toDoList);
+    setIsDone(!isDone);
   }
 
   function handleNewAction() {
-
+    console.log(newToDo);
+    setToDoList([...toDoList, newToDo]);
+    console.log(toDoList);
+    setNewToDo('');
+    setModalVisible(false);
   }
 
-  return (
-    <ScrollView style={styles.container}>
-      <StatusBar style="dark" />
-      <View style={styles.header}>
-        <View style={styles.date}>
-          <Text style={styles.dateDay}>07</Text>
-          <View style={styles.dateMonthYear}>
-            <Text style={styles.dateMonth}>SEP</Text>
-            <Text style={styles.dateYear}>2020</Text>
-          </View>
-        </View>
-        <Text style={styles.dateWeek}>Monday</Text>
-      </View>
 
-      <View style={styles.body}>
-      <View style={styles.toDo}>
-          <Text style={styles.toDoTextDone}>Pay bill</Text>
-          <TouchableOpacity style={styles.toDoButtonDone} onPress={handleCompletedAction}>
-            <Image source={doneIcon}/>
+  return (
+    <>
+      <ScrollView style={styles.container}>
+        <StatusBar style="dark" />
+        <View>
+      <Modal isVisible={modalVisible}>
+        <View style={styles.modal}>
+          <Text style={styles.modalText}>Nova Tarefa</Text>
+          <TextInput style={styles.modalInput}
+          onChangeText={text => setNewToDo(text)}
+          value={newToDo}>
+          </TextInput>
+          <TouchableOpacity onPress={handleNewAction} style={styles.modalButton}>
+            <Text style={styles.modalButtonText}>Adicionar</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.toDo}>
-          <Text style={[isDone ? styles.toDoText : styles.toDoTextDone ]}>Pay bill</Text>
-          <TouchableOpacity style={[isDone ? styles.toDoButton : styles.toDoButtonDone ]} onPress={handleCompletedAction}>
-            {!isDone && <Image source={doneIcon}/>}
-          </TouchableOpacity>
+      </Modal>
+    </View>
+        <View style={styles.header}>
+          <View style={styles.date}>
+            <Text style={styles.dateDay}>07</Text>
+            <View style={styles.dateMonthYear}>
+              <Text style={styles.dateMonth}>SEP</Text>
+              <Text style={styles.dateYear}>2020</Text>
+            </View>
+          </View>
+          <Text style={styles.dateWeek}>Monday</Text>
         </View>
-        <View style={styles.toDo}>
-          <Text style={styles.toDoText}>Watch a new serie</Text>
-          <TouchableOpacity style={styles.toDoButton} onPress={handleCompletedAction}></TouchableOpacity>
+
+        <View style={styles.body}>
+
+          {toDoList.map((toDo, index) => (
+            <View style={styles.toDo} key={toDo[index]}>
+              <Text style={[isDone ? styles.toDoText : styles.toDoTextDone]}>
+                {toDo}
+              </Text>
+              <TouchableOpacity
+                style={[isDone ? styles.toDoButton : styles.toDoButtonDone]}
+                onPress={() => handleCompletedAction(toDo[index])}
+              >
+                {!isDone && <Image source={doneIcon} />}
+              </TouchableOpacity>
+            </View>
+          ))}
+
+          
         </View>
-      </View>
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.button}>
-            <Text style={styles.textButton} onPress={handleNewAction}>+</Text>
+          <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
+            <Text style={styles.textButton}>+</Text>
           </TouchableOpacity>
         </View>
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 }
 
@@ -88,7 +123,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 40
+    marginBottom: 40,
   },
   date: {
     display: "flex",
@@ -121,8 +156,49 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
-    justifyContent: 'center',
-    alignContent: 'center'
+    justifyContent: "center",
+    alignContent: "center",
+  },
+  modal: {
+    flex: 1,
+    backgroundColor: 'white',
+    minWidth: 300,
+    maxHeight: 200,
+    alignSelf: "center",
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 8,
+  },
+  modalInput: {
+    width: 250, 
+    height: 40, 
+    borderBottomColor: '#DBDBDB', 
+    borderBottomWidth: 1,
+    fontFamily: "OpenSans_400Regular",
+    color: "#6A6A6A",
+    fontSize: 16
+  },
+  modalText: {
+    fontFamily: "OpenSans_600SemiBold",
+    textTransform: 'uppercase',
+    justifyContent: 'flex-start',
+    color: '#6A6A6A'
+  },
+  modalButton: {
+    width: 120,
+    height: 50,
+    backgroundColor: '#50E3A4',
+    justifyContent: "center",
+    alignItems: 'center',
+    borderRadius: 8
+  },
+  modalButtonText: {
+    fontFamily: "OpenSans_700Bold",
+    justifyContent: 'flex-start',
+    color: '#24704F',
+    fontSize: 16,
+    textTransform: 'uppercase'
   },
   button: {
     marginTop: 20,
@@ -144,11 +220,11 @@ const styles = StyleSheet.create({
     color: "#39A778",
   },
   toDo: {
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     alignContent: "center",
     marginBottom: 50,
     width: 300,
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   toDoButton: {
     width: 32,
@@ -157,16 +233,16 @@ const styles = StyleSheet.create({
     borderColor: "#DBDBDB",
     borderWidth: 2,
     backgroundColor: "#FFF",
-    flexDirection: 'column',
+    flexDirection: "column",
   },
   toDoButtonDone: {
     width: 32,
     height: 32,
     borderRadius: 32 / 2,
     backgroundColor: "#50E3A4",
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center'
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
   },
   toDoText: {
     fontFamily: "OpenSans_600SemiBold",
@@ -179,8 +255,7 @@ const styles = StyleSheet.create({
     color: "#B6B6B6",
   },
   footer: {
-    justifyContent: 'center',
-    alignItems: 'center'
-  }
-  
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });
